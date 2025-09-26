@@ -493,7 +493,7 @@
                                 <legend class="px-2 font-semibold">Patient Details</legend>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div><label class="block text-sm">Patient Name*</label><input type="text" id="patient-name" class="w-full p-2 border rounded-md" required></div>
-                                    <div><label class="block text-sm">Phone*</label><input type="tel" id="patient-phone" class="w-full p-2 border rounded-md" required></div>
+                                    <div><label class="block text-sm">Phone</label><input type="tel" id="patient-phone" class="w-full p-2 border rounded-md"></div>
                                     <div><label class="block text-sm">Age</label><input type="number" id="patient-age" class="w-full p-2 border rounded-md"></div>
                                     <div><label class="block text-sm">Gender</label><select id="patient-gender" class="w-full p-2 border rounded-md"><option>Male</option><option>Female</option><option>Other</option></select></div>
                                     <div class="md:col-span-2"><label class="block text-sm">Referred By</label><select id="referred-by" class="w-full p-2 border rounded-md"><option value="">None</option></select></div>
@@ -647,24 +647,31 @@
 
                 try {
                     // 1. Get or create patient
-                    const patientPhone = document.getElementById('patient-phone').value;
+                    const patientPhone = document.getElementById('patient-phone').value.trim();
                     let patientId;
-                    const patientQuery = await db.collection('patients').where('phone', '==', patientPhone).limit(1).get();
+
                     const patientDetails = {
                         name: document.getElementById('patient-name').value,
                         age: parseInt(document.getElementById('patient-age').value) || null,
                         gender: document.getElementById('patient-gender').value,
-                        phone: patientPhone
+                        phone: patientPhone || null // Store the phone number or null if it's empty
                     };
 
-                    if (patientQuery.empty) {
-                        const newPatientRef = await db.collection('patients').add(patientDetails);
-                        patientId = newPatientRef.id;
-                    } else {
-                        patientId = patientQuery.docs[0].id;
-                        await db.collection('patients').doc(patientId).update(patientDetails); // Update details if they changed
+                    let patientQuery;
+                    // Only search for a patient if a phone number was actually entered
+                    if (patientPhone) {
+                        patientQuery = await db.collection('patients').where('phone', '==', patientPhone).limit(1).get();
                     }
 
+                    if (patientPhone && patientQuery && !patientQuery.empty) {
+                        // If a phone was entered AND a patient was found, update that patient
+                        patientId = patientQuery.docs[0].id;
+                        await db.collection('patients').doc(patientId).update(patientDetails);
+                    } else {
+                        // Otherwise (no phone entered, or phone was new), create a new patient
+                        const newPatientRef = await db.collection('patients').add(patientDetails);
+                        patientId = newPatientRef.id;
+                    }
                     // 2. Prepare bill items
                     const items = [];
                     billItemsContainer.querySelectorAll('.bill-item').forEach(itemRow => {
