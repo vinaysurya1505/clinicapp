@@ -404,13 +404,11 @@
                 'Test',
                 [
                     { id: 'test-name', label: 'Test Name', type: 'text', key: 'name' },
-                    { id: 'test-code', label: 'Test Code', type: 'text', key: 'code' },
                     { id: 'test-price', label: 'Price (₹)', type: 'number', key: 'price' }
                 ],
-                ['Name', 'Code', 'Price', 'Actions'],
+                ['Name', 'Price', 'Actions'],
                 (id, data) => `
                     <td class="px-6 py-4 whitespace-nowrap">${data.name}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${data.code}</td>
                     <td class="px-6 py-4 whitespace-nowrap">₹${data.price.toFixed(2)}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button class="edit-btn text-indigo-600 hover:text-indigo-900">Edit</button>
@@ -426,13 +424,11 @@
                 'Doctor',
                 [
                     { id: 'doctor-name', label: 'Doctor Name', type: 'text', key: 'name' },
-                    { id: 'doctor-email', label: 'Email', type: 'email', key: 'email' },
                     { id: 'doctor-commission', label: 'Commission (%)', type: 'number', key: 'commissionPercent' }
                 ],
-                ['Name', 'Email', 'Commission %', 'Commission Balance', 'Actions'],
+                ['Name', 'Commission %', 'Commission Balance', 'Actions'],
                 (id, data) => `
                     <td class="px-6 py-4 whitespace-nowrap">${data.name}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${data.email || 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap">${data.commissionPercent || 0}%</td>
                     <td class="px-6 py-4 whitespace-nowrap">₹${(data.commissionBalance || 0).toFixed(2)}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
