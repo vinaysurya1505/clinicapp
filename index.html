@@ -32,21 +32,6 @@
 
     <div id="app-container">
         </div>
-    <!-- Success Modal for Bill Creation -->
-    <div id="success-modal" class="fixed inset-0 modal-bg hidden flex items-center justify-center p-4">
-        <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm text-center">
-            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
-                <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-            </div>
-            <h3 class="text-lg leading-6 font-medium text-gray-900">Bill Created Successfully!</h3>
-            <p id="success-modal-bill-number" class="text-sm text-gray-500 mt-2"></p>
-            <div class="mt-5 flex justify-center gap-3">
-                <button type="button" id="success-modal-close" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Close</button>
-                <button type="button" id="success-modal-print" class="px-4 py-2 bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200">Print</button>
-                <button type="button" id="success-modal-download" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Download PDF</button>
-            </div>
-        </div>
-    </div>
 
     <div id="pdf-preview" class="hidden fixed -left-[2000px] top-0 w-[800px] bg-white text-black p-8 font-sans">
         </div>
@@ -551,6 +536,78 @@
             const billModal = document.getElementById('bill-modal');
             const billForm = document.getElementById('bill-form');
             const billItemsContainer = document.getElementById('bill-items');
+            
+            // --- Functions to control modal ---
+            const openModal = () => billModal.classList.remove('hidden');
+            const closeModal = () => {
+                billModal.classList.add('hidden');
+                billForm.reset();
+                billItemsContainer.innerHTML = '';
+                updateBillTotals();
+            }
+
+            // --- Function to update all bill totals ---
+            function updateBillTotals() {
+                let subtotal = 0;
+                billItemsContainer.querySelectorAll('.bill-item').forEach(itemRow => {
+                    const price = parseFloat(itemRow.dataset.price) || 0;
+                    const quantity = parseInt(itemRow.querySelector('.item-quantity').value) || 1;
+                    subtotal += price * quantity;
+                });
+
+                const discountPercent = parseFloat(document.getElementById('discount-percent').value) || 0;
+                const gstPercent = parseFloat(document.getElementById('gst-percent').value) || 0;
+
+                const discountAmount = subtotal * (discountPercent / 100);
+                const postDiscountTotal = subtotal - discountAmount;
+                const gstAmount = postDiscountTotal * (gstPercent / 100);
+                const grandTotal = postDiscountTotal + gstAmount;
+
+                document.getElementById('subtotal').textContent = `₹${subtotal.toFixed(2)}`;
+                document.getElementById('discount-amount').textContent = `- ₹${discountAmount.toFixed(2)}`;
+                document.getElementById('post-discount-total').textContent = `₹${postDiscountTotal.toFixed(2)}`;
+                document.getElementById('gst-amount').textContent = `+ ₹${gstAmount.toFixed(2)}`;
+                document.getElementById('grand-total').textContent = `₹${grandTotal.toFixed(2)}`;
+            }
+
+            // --- Function to add a new test item row to the form ---
+            function addBillItem() {
+                const itemId = `item-${Date.now()}`;
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'bill-item flex items-center gap-2';
+                itemDiv.dataset.price = "0";
+
+                const testOptions = allTests.map(t => `<option value="${t.id}" data-price="${t.price}">${t.name} (₹${t.price})</option>`).join('');
+
+                itemDiv.innerHTML = `
+                    <select class="item-test-select flex-grow p-2 border rounded-md">${testOptions}</select>
+                    <input type="number" value="1" min="1" class="item-quantity w-16 p-2 border rounded-md">
+                    <button type="button" class="remove-item-btn px-2 py-1 bg-red-500 text-white rounded-md text-xs">X</button>
+                `;
+                billItemsContainer.appendChild(itemDiv);
+
+                const testSelect = itemDiv.querySelector('.item-test-select');
+                const quantityInput = itemDiv.querySelector('.item-quantity');
+
+                // Set initial price from first option
+                if (allTests.length > 0) {
+                    itemDiv.dataset.price = allTests[0].price;
+                }
+
+                testSelect.onchange = (e) => {
+                    const selectedOption = e.target.options[e.target.selectedIndex];
+                    itemDiv.dataset.price = selectedOption.dataset.price;
+                    updateBillTotals();
+                };
+                quantityInput.onchange = updateBillTotals;
+                quantityInput.onkeyup = updateBillTotals;
+
+                itemDiv.querySelector('.remove-item-btn').onclick = () => {
+                    itemDiv.remove();
+                    updateBillTotals();
+                };
+                updateBillTotals();
+            }
 
             // --- Load initial data for dropdowns ---
             async function loadPrerequisites() {
@@ -559,10 +616,11 @@
 
                 const doctorsSnapshot = await db.collection('doctors').get();
                 allDoctors = doctorsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
                 const referredBySelect = document.getElementById('referred-by');
                 referredBySelect.innerHTML = '<option value="">None</option>' + allDoctors.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
             }
-
+            
             // --- Event Listeners for the page ---
             document.getElementById('add-bill-btn').onclick = () => {
                 loadPrerequisites().then(() => {
@@ -572,14 +630,14 @@
             };
             document.getElementById('close-modal-btn').onclick = closeModal;
             document.getElementById('add-item-btn').onclick = addBillItem;
-
+            
             // Add listeners for total calculation
             ['discount-percent', 'gst-percent'].forEach(id => {
                 const el = document.getElementById(id);
                 el.onchange = updateBillTotals;
                 el.onkeyup = updateBillTotals;
             });
-
+            
             // --- Handle Form Submission ---
             billForm.onsubmit = async (e) => {
                 e.preventDefault();
@@ -588,9 +646,123 @@
                 submitBtn.textContent = 'Saving...';
 
                 try {
-                    // ...existing code for bill creation...
+                    // 1. Get or create patient
+                    const patientPhone = document.getElementById('patient-phone').value.trim();
+                    let patientId;
+
+                    const patientDetails = {
+                        name: document.getElementById('patient-name').value,
+                        age: parseInt(document.getElementById('patient-age').value) || null,
+                        gender: document.getElementById('patient-gender').value,
+                        phone: patientPhone || null // Store the phone number or null if it's empty
+                    };
+
+                    let patientQuery;
+                    // Only search for a patient if a phone number was actually entered
+                    if (patientPhone) {
+                        patientQuery = await db.collection('patients').where('phone', '==', patientPhone).limit(1).get();
+                    }
+
+                    if (patientPhone && patientQuery && !patientQuery.empty) {
+                        // If a phone was entered AND a patient was found, update that patient
+                        patientId = patientQuery.docs[0].id;
+                        await db.collection('patients').doc(patientId).update(patientDetails);
+                    } else {
+                        // Otherwise (no phone entered, or phone was new), create a new patient
+                        const newPatientRef = await db.collection('patients').add(patientDetails);
+                        patientId = newPatientRef.id;
+                    }
+                    // 2. Prepare bill items
+                    const items = [];
+                    billItemsContainer.querySelectorAll('.bill-item').forEach(itemRow => {
+                        const testId = itemRow.querySelector('.item-test-select').value;
+                        const selectedTest = allTests.find(t => t.id === testId);
+                        if(selectedTest) {
+                             items.push({
+                                testId: testId,
+                                name: selectedTest.name,
+                                price: selectedTest.price,
+                                quantity: parseInt(itemRow.querySelector('.item-quantity').value) || 1
+                            });
+                        }
+                    });
+
+                    if (items.length === 0) throw new Error("At least one test must be added to the bill.");
+
+                    // 3. Get totals
+                    const subtotal = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+                    const discountPercent = parseFloat(document.getElementById('discount-percent').value) || 0;
+                    const gstPercent = parseFloat(document.getElementById('gst-percent').value) || 0;
+                    const discountAmount = subtotal * (discountPercent / 100);
+                    const postDiscountTotal = subtotal - discountAmount;
+                    const gstAmount = postDiscountTotal * (gstPercent / 100);
+                    const total = postDiscountTotal + gstAmount;
+
+                    // 4. Generate Bill Number
+                    const counterRef = db.collection('metadata').doc('counters');
+                    const newBillNumber = await db.runTransaction(async (transaction) => {
+                        const counterDoc = await transaction.get(counterRef);
+                        if (!counterDoc.exists) {
+                            throw "Bill counter document not found in metadata/counters!";
+                        }
+                        const newBillNo = counterDoc.data().billNo;
+                        transaction.update(counterRef, { billNo: FieldValue.increment(1) });
+                        return `PDB${newBillNo}`;
+                    });
+                    
+                    // 5. Save Bill
+                    const billData = {
+                        patientId,
+                        patientDetails,
+                        billNumber: newBillNumber,
+                        referredById: document.getElementById('referred-by').value || null,
+                        items,
+                        subtotal,
+                        discountPercent,
+                        gstPercent,
+                        total,
+                        createdAt: Timestamp.now()
+                    };
+
+                    const billRef = await db.collection('bills').add(billData);
+
+                    // 6. Create income transaction
+                    await db.collection('transactions').add({
+                        type: 'income',
+                        amount: total,
+                        description: `Payment for Bill #${newBillNumber}`,
+                        relatedBillId: billRef.id,
+                        date: Timestamp.now()
+                    });
+
+                    // 7. Handle doctor commission
+                    const referredById = document.getElementById('referred-by').value;
+                    if (referredById) {
+                        const doctor = allDoctors.find(d => d.id === referredById);
+                        if (doctor && doctor.commissionPercent > 0) {
+                            const commissionAmount = subtotal * (doctor.commissionPercent / 100);
+                            const doctorRef = db.collection('doctors').doc(referredById);
+                            
+                            // Update doctor's balance
+                            await doctorRef.update({
+                                commissionBalance: FieldValue.increment(commissionAmount)
+                            });
+
+                            // Create commission transaction
+                            await db.collection('transactions').add({
+                                type: 'commission',
+                                amount: commissionAmount,
+                                description: `Commission for Bill #${newBillNumber} (Dr. ${doctor.name})`,
+                                relatedBillId: billRef.id,
+                                relatedDoctorId: referredById,
+                                date: Timestamp.now()
+                            });
+                        }
+                    }
+
+                    alert(`Bill #${newBillNumber} created successfully!`);
                     closeModal();
-                    showSuccessModal(billRef.id, newBillNumber);
+
                 } catch (error) {
                     console.error("Error creating bill: ", error);
                     alert("Failed to create bill: " + error.message);
@@ -599,38 +771,36 @@
                     submitBtn.textContent = 'Save Bill';
                 }
             };
-
-            // --- NEW/UPDATED PDF and MODAL FUNCTIONS ---
-            function showSuccessModal(billId, billNumber) {
-                const modal = document.getElementById('success-modal');
-                document.getElementById('success-modal-bill-number').textContent = `Bill No: ${billNumber}`;
-                modal.classList.remove('hidden');
-
-                document.getElementById('success-modal-close').onclick = () => modal.classList.add('hidden');
-                document.getElementById('success-modal-download').onclick = () => generateBillAction(billId, 'download');
-                document.getElementById('success-modal-print').onclick = () => generateBillAction(billId, 'print');
-            }
-
-            async function generateBillAction(billId, action) {
-                // ...existing code...
-            }
-
+            
             // --- Listen for and display recent bills ---
-            // ...existing code...
-
-            // --- Utility function stubs ---
-            function addBillItem() {
-                // TODO: Implement addBillItem logic
-            }
-            function openModal() {
-                // TODO: Implement openModal logic
-            }
-            function closeModal() {
-                // TODO: Implement closeModal logic
-            }
-            function updateBillTotals() {
-                // TODO: Implement updateBillTotals logic
-            }
+            const billsListBody = document.getElementById('bills-list-body');
+            const unsubscribe = db.collection('bills').orderBy('createdAt', 'desc').limit(20).onSnapshot(snapshot => {
+                billsListBody.innerHTML = '';
+                 if (snapshot.empty) {
+                    billsListBody.innerHTML = `<tr><td colspan="5" class="text-center py-4">No bills found.</td></tr>`;
+                    return;
+                }
+                snapshot.forEach(doc => {
+                    const bill = doc.data();
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-6 py-4 font-medium">${bill.billNumber}</td>
+                        <td class="px-6 py-4">${bill.patientDetails.name}</td>
+                        <td class="px-6 py-4">${bill.createdAt.toDate().toLocaleDateString()}</td>
+                        <td class="px-6 py-4 font-semibold">₹${bill.total.toFixed(2)}</td>
+                        <td class="px-6 py-4">
+                            <button data-id="${doc.id}" class="view-pdf-btn text-blue-600 hover:underline">View/PDF</button>
+                        </td>
+                    `;
+                    billsListBody.appendChild(row);
+                });
+                
+                // Add event listeners to newly created buttons
+                document.querySelectorAll('.view-pdf-btn').forEach(btn => {
+                    btn.onclick = (e) => generateAndDownloadPDF(e.target.dataset.id);
+                });
+            });
+            state.listeners.push(unsubscribe); // Store unsubscribe function
         }
         
         // ========================================================================
@@ -793,7 +963,7 @@
         
         // --- Initial Render ---
         renderApp();
-    }
+    });
     </script>
 </body>
 </html>
