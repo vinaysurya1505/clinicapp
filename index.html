@@ -771,10 +771,12 @@
                 sevenDaysAgo.setHours(0,0,0,0);
                 const startTimestamp = Timestamp.fromDate(sevenDaysAgo);
 
-                const [incomeTxs, expenditureTxs] = await Promise.all([
-                    db.collection('transactions').where('type', '==', 'income').where('date', '>=', startTimestamp).get(),
+                const [allTransactionsSnap, expenditureTxs] = await Promise.all([
+                    db.collection('transactions').where('date', '>=', startTimestamp).get(),
                     db.collection('expenditures').where('date', '>=', startTimestamp).get()
                 ]);
+
+                const incomeDocs = allTransactionsSnap.docs.filter(doc => doc.data().type === 'income');
 
                 const mapDateToValue = (docs) => {
                     const dateMap = {};
@@ -785,7 +787,7 @@
                     return dateMap;
                 };
 
-                const dailyIncome = mapDateToValue(incomeTxs.docs);
+                const dailyIncome = mapDateToValue(incomeDocs);
                 const dailyExpenditure = mapDateToValue(expenditureTxs.docs);
 
                 labels.forEach((label, index) => {
@@ -857,16 +859,17 @@
                             <input type="date" id="end-date" class="mt-1 p-2 border rounded-md">
                         </div>
                         <button id="generate-report-btn" class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md">Generate Report</button>
-                        <button id="download-report-btn" class="px-4 py-2 bg-green-600 text-white font-semibold rounded-md hidden">Download PDF</button>
                     </div>
-                    <div id="report-container" class="overflow-x-auto">
-                         <p class="text-center text-gray-500 py-8">Please select a date range and click "Generate Report" to view data.</p>
+                    <div id="report-output">
+                        <div id="report-container" class="overflow-x-auto">
+                            <p class="text-center text-gray-500 py-8">Please select a date range and click "Generate Report" to view data.</p>
+                        </div>
                     </div>
                 </div>`;
 
             const generateBtn = document.getElementById('generate-report-btn');
-            const downloadBtn = document.getElementById('download-report-btn');
             const reportContainer = document.getElementById('report-container');
+            const reportOutput = document.getElementById('report-output');
 
             generateBtn.onclick = async () => {
                 const startDateStr = document.getElementById('start-date').value;
@@ -887,49 +890,60 @@
                     return;
                 }
 
-                reportContainer.innerHTML = `<div class="text-center py-10"><div class="spinner h-12 w-12 mx-auto border-4"></div><p class="mt-4">Fetching report data...</p></div>`;
-                downloadBtn.classList.add('hidden');
-
+                reportOutput.innerHTML = `<div id="report-container" class="overflow-x-auto"><div class="text-center py-10"><div class="spinner h-12 w-12 mx-auto border-4"></div><p class="mt-4">Fetching report data...</p></div></div>`;
+                
                 try {
                     const startTimestamp = Timestamp.fromDate(startDate);
                     const endTimestamp = Timestamp.fromDate(endDate);
 
-                    const [billsSnap, expendituresSnap, commissionsSnap] = await Promise.all([
+                    const [billsSnap, expendituresSnap, allTransactionsSnap] = await Promise.all([
                         db.collection('bills').where('createdAt', '>=', startTimestamp).where('createdAt', '<=', endTimestamp).get(),
                         db.collection('expenditures').where('date', '>=', startTimestamp).where('date', '<=', endTimestamp).get(),
-                        db.collection('transactions').where('type', '==', 'commission').where('date', '>=', startTimestamp).where('date', '<=', endTimestamp).get()
+                        db.collection('transactions').where('date', '>=', startTimestamp).where('date', '<=', endTimestamp).get()
                     ]);
                     
+                    const commissionsDocs = allTransactionsSnap.docs.filter(doc => doc.data().type === 'commission');
                     const dailyData = {};
-
-                    const processDocs = (docs, key, valueField = 'amount') => {
-                        docs.forEach(doc => {
-                            const data = doc.data();
-                            const dateStr = data.createdAt?.toDate().toISOString().split('T')[0] || data.date?.toDate().toISOString().split('T')[0];
-                            if (dateStr) {
-                                if (!dailyData[dateStr]) dailyData[dateStr] = { patients: new Set(), revenue: 0, expenditure: 0, commission: 0 };
-                                if (key === 'patients') dailyData[dateStr].patients.add(data.patientId);
-                                dailyData[dateStr][key] = (dailyData[dateStr][key] || 0) + (data[valueField] || 0);
-                            }
-                        });
-                    };
 
                     billsSnap.docs.forEach(doc => {
                         const data = doc.data();
                         const dateStr = data.createdAt.toDate().toISOString().split('T')[0];
                         if (!dailyData[dateStr]) dailyData[dateStr] = { patients: new Set(), revenue: 0, expenditure: 0, commission: 0 };
                         dailyData[dateStr].patients.add(data.patientId);
-                        dailyData[dateStr].revenue += data.total;
+                        dailyData[dateStr].revenue += (Number(data.total) || 0);
                     });
-                    processDocs(expendituresSnap.docs, 'expenditure');
-                    processDocs(commissionsSnap.docs, 'commission');
+
+                    expendituresSnap.docs.forEach(doc => {
+                         const data = doc.data();
+                         const dateStr = data.date?.toDate().toISOString().split('T')[0];
+                         if (dateStr) {
+                            if (!dailyData[dateStr]) dailyData[dateStr] = { patients: new Set(), revenue: 0, expenditure: 0, commission: 0 };
+                            dailyData[dateStr].expenditure += (Number(data.amount) || 0);
+                         }
+                    });
+
+                    commissionsDocs.forEach(doc => {
+                        const data = doc.data();
+                        const dateStr = data.date?.toDate().toISOString().split('T')[0];
+                        if(dateStr) {
+                            if (!dailyData[dateStr]) dailyData[dateStr] = { patients: new Set(), revenue: 0, expenditure: 0, commission: 0 };
+                            dailyData[dateStr].commission += (Number(data.amount) || 0);
+                        }
+                    });
 
                     const sortedDates = Object.keys(dailyData).sort();
                     if(sortedDates.length === 0) {
-                        reportContainer.innerHTML = `<p class="text-center text-gray-500 py-8">No data found for the selected date range.</p>`;
+                        reportOutput.innerHTML = `<div id="report-container" class="overflow-x-auto"><p class="text-center text-gray-500 py-8">No data found for the selected date range.</p></div>`;
                         return;
                     }
                     
+                    const reportTitle = `
+                        <div class="flex justify-between items-center mb-4">
+                           <h3 class="text-lg font-bold">Financial Report (from ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()})</h3>
+                           <button id="download-report-btn" class="px-4 py-2 bg-green-600 text-white font-semibold rounded-md">Download PDF</button>
+                        </div>
+                    `;
+
                     let tableHTML = `<table id="report-table" class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr>
                         <th class="px-6 py-3">Date</th>
                         <th class="px-6 py-3">Patients</th>
@@ -953,27 +967,25 @@
                     });
 
                     tableHTML += `</tbody></table>`;
-                    reportContainer.innerHTML = tableHTML;
-                    downloadBtn.classList.remove('hidden');
+                    reportOutput.innerHTML = reportTitle + `<div class="overflow-x-auto">${tableHTML}</div>`;
 
+                    document.getElementById('download-report-btn').onclick = () => {
+                        const reportContent = document.getElementById('report-output');
+                        if (reportContent) {
+                            const { jsPDF } = window.jspdf;
+                             html2canvas(reportContent).then(canvas => {
+                                const imgData = canvas.toDataURL('image/png');
+                                const pdf = new jsPDF('p', 'mm', 'a4');
+                                const pdfWidth = pdf.internal.pageSize.getWidth();
+                                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                                pdf.addImage(imgData, 'PNG', 10, 10, pdfWidth - 20, pdfHeight - 20);
+                                pdf.save(`financial_report_${startDateStr}_to_${endDateStr}.pdf`);
+                            });
+                        }
+                    };
                 } catch (error) {
                     console.error("Error generating report:", error);
-                    reportContainer.innerHTML = `<p class="text-center text-red-500 py-8">Failed to generate report. Please check the console.</p>`;
-                }
-            };
-            
-            downloadBtn.onclick = () => {
-                const reportTable = document.getElementById('report-table');
-                if (reportTable) {
-                    const { jsPDF } = window.jspdf;
-                     html2canvas(reportTable).then(canvas => {
-                        const imgData = canvas.toDataURL('image/png');
-                        const pdf = new jsPDF('p', 'mm', 'a4');
-                        const pdfWidth = pdf.internal.pageSize.getWidth();
-                        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-                        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-                        pdf.save('financial_report.pdf');
-                    });
+                    reportOutput.innerHTML = `<div id="report-container" class="overflow-x-auto"><p class="text-center text-red-500 py-8">Failed to generate report. Please check the console.</p></div>`;
                 }
             };
         }
