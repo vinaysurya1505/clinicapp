@@ -554,10 +554,76 @@
         // --- 13. SEED DATA FUNCTION ---
         // ========================================================================
         async function seedFirestoreData() {
-            // Logic to add sample tests, doctors, bills etc.
-            alert('Seeding data... Check the console for progress.');
+            alert('You will be prompted to enter sample data for Firestore collections.');
             console.log('Seeding process started.');
-            // ... implementation
+
+            // --- TESTS ---
+            const testName = prompt('Enter test name (e.g. CBC):');
+            const testCode = prompt('Enter test code (e.g. CBC):');
+            const testPrice = parseFloat(prompt('Enter test price (e.g. 250):'));
+            if (testName && testCode && !isNaN(testPrice)) {
+                await db.collection('tests').add({ name: testName, code: testCode, price: testPrice });
+            }
+
+            // --- DOCTORS ---
+            const doctorName = prompt('Enter doctor name (e.g. Dr. Sharma):');
+            const doctorEmail = prompt('Enter doctor email (e.g. sharma@clinic.com):');
+            if (doctorName && doctorEmail) {
+                await db.collection('doctors').add({ name: doctorName, email: doctorEmail, commissionBalance: 0 });
+            }
+
+            // --- PATIENTS ---
+            const patientName = prompt('Enter patient name (e.g. Amit Kumar):');
+            const patientAge = parseInt(prompt('Enter patient age (e.g. 30):'), 10);
+            const patientGender = prompt('Enter patient gender (Male/Female/Other):');
+            const patientPhone = prompt('Enter patient phone:');
+            if (patientName && !isNaN(patientAge) && patientGender && patientPhone) {
+                await db.collection('patients').add({ name: patientName, age: patientAge, gender: patientGender, phone: patientPhone });
+            }
+
+            // --- BILLS ---
+            const billNumber = prompt('Enter bill number (e.g. BILL-001):');
+            const billSubtotal = parseFloat(prompt('Enter bill subtotal (e.g. 350):'));
+            const billDiscountPercent = parseFloat(prompt('Enter discount percent (e.g. 10):'));
+            const billGstPercent = parseFloat(prompt('Enter GST percent (e.g. 5):'));
+            const billTotal = parseFloat(prompt('Enter bill total (e.g. 332.5):'));
+            if (billNumber && !isNaN(billSubtotal) && !isNaN(billDiscountPercent) && !isNaN(billGstPercent) && !isNaN(billTotal)) {
+                await db.collection('bills').add({
+                    patientId: '',
+                    patientDetails: { name: patientName, age: patientAge, gender: patientGender, phone: patientPhone },
+                    billNumber,
+                    referredById: null,
+                    items: [{ testId: '', name: testName, price: testPrice, quantity: 1 }],
+                    subtotal: billSubtotal,
+                    discountPercent: billDiscountPercent,
+                    gstPercent: billGstPercent,
+                    total: billTotal,
+                    createdAt: Timestamp.now()
+                });
+            }
+
+            // --- EXPENDITURES ---
+            const expDesc = prompt('Enter expenditure description (e.g. Lab Supplies):');
+            const expAmount = parseFloat(prompt('Enter expenditure amount (e.g. 1200):'));
+            if (expDesc && !isNaN(expAmount)) {
+                await db.collection('expenditures').add({ description: expDesc, amount: expAmount, date: Timestamp.now() });
+            }
+
+            // --- TRANSACTIONS ---
+            const transType = prompt('Enter transaction type (income/expenditure/commission):');
+            const transAmount = parseFloat(prompt('Enter transaction amount (e.g. 332.5):'));
+            const transDesc = prompt('Enter transaction description (e.g. Bill Payment):');
+            if (transType && !isNaN(transAmount) && transDesc) {
+                await db.collection('transactions').add({
+                    type: transType,
+                    amount: transAmount,
+                    description: transDesc,
+                    relatedBillId: null,
+                    relatedDoctorId: null,
+                    date: Timestamp.now()
+                });
+            }
+
             console.log('Seeding complete.');
         }
 
