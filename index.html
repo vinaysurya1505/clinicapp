@@ -32,6 +32,21 @@
 
     <div id="app-container">
         </div>
+    <!-- Success Modal for Bill Creation -->
+    <div id="success-modal" class="fixed inset-0 modal-bg hidden flex items-center justify-center p-4">
+        <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+                <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Bill Created Successfully!</h3>
+            <p id="success-modal-bill-number" class="text-sm text-gray-500 mt-2"></p>
+            <div class="mt-5 flex justify-center gap-3">
+                <button type="button" id="success-modal-close" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Close</button>
+                <button type="button" id="success-modal-print" class="px-4 py-2 bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200">Print</button>
+                <button type="button" id="success-modal-download" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Download PDF</button>
+            </div>
+        </div>
+    </div>
 
     <div id="pdf-preview" class="hidden fixed -left-[2000px] top-0 w-[800px] bg-white text-black p-8 font-sans">
         </div>
@@ -654,21 +669,18 @@
                         name: document.getElementById('patient-name').value,
                         age: parseInt(document.getElementById('patient-age').value) || null,
                         gender: document.getElementById('patient-gender').value,
-                        phone: patientPhone || null // Store the phone number or null if it's empty
+                        phone: patientPhone || null 
                     };
 
                     let patientQuery;
-                    // Only search for a patient if a phone number was actually entered
                     if (patientPhone) {
                         patientQuery = await db.collection('patients').where('phone', '==', patientPhone).limit(1).get();
                     }
 
                     if (patientPhone && patientQuery && !patientQuery.empty) {
-                        // If a phone was entered AND a patient was found, update that patient
                         patientId = patientQuery.docs[0].id;
                         await db.collection('patients').doc(patientId).update(patientDetails);
                     } else {
-                        // Otherwise (no phone entered, or phone was new), create a new patient
                         const newPatientRef = await db.collection('patients').add(patientDetails);
                         patientId = newPatientRef.id;
                     }
@@ -693,34 +705,23 @@
                     const subtotal = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
                     const discountPercent = parseFloat(document.getElementById('discount-percent').value) || 0;
                     const gstPercent = parseFloat(document.getElementById('gst-percent').value) || 0;
-                    const discountAmount = subtotal * (discountPercent / 100);
-                    const postDiscountTotal = subtotal - discountAmount;
-                    const gstAmount = postDiscountTotal * (gstPercent / 100);
-                    const total = postDiscountTotal + gstAmount;
+                    const total = subtotal - (subtotal * (discountPercent / 100)) + ((subtotal - (subtotal * (discountPercent/100))) * (gstPercent / 100));
 
                     // 4. Generate Bill Number
                     const counterRef = db.collection('metadata').doc('counters');
                     const newBillNumber = await db.runTransaction(async (transaction) => {
                         const counterDoc = await transaction.get(counterRef);
-                        if (!counterDoc.exists) {
-                            throw "Bill counter document not found in metadata/counters!";
-                        }
+                        if (!counterDoc.exists) throw "Bill counter document not found!";
                         const newBillNo = counterDoc.data().billNo;
                         transaction.update(counterRef, { billNo: FieldValue.increment(1) });
                         return `PDB${newBillNo}`;
                     });
-                    
+
                     // 5. Save Bill
                     const billData = {
-                        patientId,
-                        patientDetails,
-                        billNumber: newBillNumber,
+                        patientId, patientDetails, billNumber: newBillNumber,
                         referredById: document.getElementById('referred-by').value || null,
-                        items,
-                        subtotal,
-                        discountPercent,
-                        gstPercent,
-                        total,
+                        items, subtotal, discountPercent, gstPercent, total,
                         createdAt: Timestamp.now()
                     };
 
@@ -728,11 +729,8 @@
 
                     // 6. Create income transaction
                     await db.collection('transactions').add({
-                        type: 'income',
-                        amount: total,
-                        description: `Payment for Bill #${newBillNumber}`,
-                        relatedBillId: billRef.id,
-                        date: Timestamp.now()
+                        type: 'income', amount: total, description: `Payment for Bill #${newBillNumber}`,
+                        relatedBillId: billRef.id, date: Timestamp.now()
                     });
 
                     // 7. Handle doctor commission
@@ -741,27 +739,18 @@
                         const doctor = allDoctors.find(d => d.id === referredById);
                         if (doctor && doctor.commissionPercent > 0) {
                             const commissionAmount = subtotal * (doctor.commissionPercent / 100);
-                            const doctorRef = db.collection('doctors').doc(referredById);
-                            
-                            // Update doctor's balance
-                            await doctorRef.update({
-                                commissionBalance: FieldValue.increment(commissionAmount)
-                            });
-
-                            // Create commission transaction
+                            await db.collection('doctors').doc(referredById).update({ commissionBalance: FieldValue.increment(commissionAmount) });
                             await db.collection('transactions').add({
-                                type: 'commission',
-                                amount: commissionAmount,
-                                description: `Commission for Bill #${newBillNumber} (Dr. ${doctor.name})`,
-                                relatedBillId: billRef.id,
-                                relatedDoctorId: referredById,
-                                date: Timestamp.now()
+                                type: 'commission', amount: commissionAmount, description: `Commission for Bill #${newBillNumber}`,
+                                relatedBillId: billRef.id, relatedDoctorId: referredById, date: Timestamp.now()
                             });
                         }
                     }
 
-                    alert(`Bill #${newBillNumber} created successfully!`);
+                    // --- THIS IS THE NEW PART ---
+                    // Show the new success modal instead of the old alert
                     closeModal();
+                    showSuccessModal(billRef.id, newBillNumber);
 
                 } catch (error) {
                     console.error("Error creating bill: ", error);
@@ -771,6 +760,118 @@
                     submitBtn.textContent = 'Save Bill';
                 }
             };
+
+            // --- NEW/UPDATED PDF and MODAL FUNCTIONS ---
+            function showSuccessModal(billId, billNumber) {
+                const modal = document.getElementById('success-modal');
+                document.getElementById('success-modal-bill-number').textContent = `Bill No: ${billNumber}`;
+                modal.classList.remove('hidden');
+
+                document.getElementById('success-modal-close').onclick = () => modal.classList.add('hidden');
+                document.getElementById('success-modal-download').onclick = () => generateBillAction(billId, 'download');
+                document.getElementById('success-modal-print').onclick = () => generateBillAction(billId, 'print');
+            }
+
+            async function generateBillAction(billId, action) {
+                const { jsPDF } = window.jspdf;
+                const loader = document.createElement('div');
+                loader.innerHTML = `<div class=\"fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50\"><div class=\"spinner h-12 w-12 rounded-full border-4 border-t-blue-500\"></div></div>`;
+                document.body.appendChild(loader);
+
+                try {
+                    const billDoc = await db.collection('bills').doc(billId).get();
+                    if (!billDoc.exists) throw new Error("Bill not found");
+                    const bill = billDoc.data();
+                    const previewEl = document.getElementById('pdf-preview');
+                    const doctorSnap = bill.referredById ? await db.collection('doctors').doc(bill.referredById).get() : null;
+                    const doctorName = doctorSnap && doctorSnap.exists ? doctorSnap.data().name : 'None';
+                    const itemsHtml = bill.items.map((item, index) => `
+                        <tr>
+                            <td style=\"padding: 8px; border: 1px solid #ddd;\">${index + 1}</td>
+                            <td style=\"padding: 8px; border: 1px solid #ddd;\">${item.name}</td>
+                            <td style=\"padding: 8px; border: 1px solid #ddd; text-align: right;\">${item.quantity}</td>
+                            <td style=\"padding: 8px; border: 1px solid #ddd; text-align: right;\">${item.price.toFixed(2)}</td>
+                            <td style=\"padding: 8px; border: 1px solid #ddd; text-align: right;\">${(item.price * item.quantity).toFixed(2)}</td>
+                        </tr>`).join('');
+                    previewEl.innerHTML = `
+                        <div style=\"width: 210mm; height: 297mm; padding: 20mm; box-sizing: border-box; font-family: Arial, sans-serif; font-size: 12px; color: #333;\">
+                            <div style=\"text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px;\">
+                                <h1 style=\"font-size: 24px; font-weight: bold; margin: 0; color: #000;\">Perfect Diagnostic and Ultrasound Centre</h1>
+                                <p style=\"margin: 5px 0;\">Near Government Hospital, Front of Old Gate, Partawal Bazar, Maharajganj, Uttar Pradesh</p>
+                                <p style=\"margin: 5px 0;\">Phone: +91 9838104111, +91 9616434212 | Email: perfectdiagnostic@gmail.com</p>
+                            </div>
+                            <table style=\"width: 100%; margin-bottom: 20px;\">
+                                <tr>
+                                    <td style=\"width: 50%; vertical-align: top;\">
+                                        <h2 style=\"font-size: 14px; font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 10px;\">Patient Information</h2>
+                                        <p><strong>Name:</strong> ${bill.patientDetails.name}</p>
+                                        <p><strong>Age/Gender:</strong> ${bill.patientDetails.age || 'N/A'} / ${bill.patientDetails.gender}</p>
+                                        <p><strong>Mobile:</strong> ${bill.patientDetails.phone || 'N/A'}</p>
+                                    </td>
+                                    <td style=\"width: 50%; vertical-align: top;\">
+                                        <h2 style=\"font-size: 14px; font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 10px;\">Bill Details</h2>
+                                        <p><strong>Bill No:</strong> ${bill.billNumber}</p>
+                                        <p><strong>Date:</strong> ${bill.createdAt.toDate().toLocaleDateString()}</p>
+                                        <p><strong>Doctor Referred:</strong> Dr. ${doctorName}</p>
+                                    </td>
+                                </tr>
+                            </table>
+                            <table style=\"width: 100%; border-collapse: collapse; font-size: 12px;\">
+                                <thead style=\"background-color: #f2f2f2;\">
+                                    <tr>
+                                        <th style=\"padding: 8px; border: 1px solid #ddd; text-align: left;\">S.No</th>
+                                        <th style=\"padding: 8px; border: 1px solid #ddd; text-align: left;\">Test Name</th>
+                                        <th style=\"padding: 8px; border: 1px solid #ddd; text-align: right;\">Qty</th>
+                                        <th style=\"padding: 8px; border: 1px solid #ddd; text-align: right;\">Rate (INR)</th>
+                                        <th style=\"padding: 8px; border: 1px solid #ddd; text-align: right;\">Amount (INR)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${itemsHtml}</tbody>
+                            </table>
+                            <table style=\"width: 40%; margin-left: 60%; margin-top: 20px; border-collapse: collapse;\">
+                                <tr>
+                                    <td style=\"padding: 8px;\">Subtotal:</td>
+                                    <td style=\"padding: 8px; text-align: right;\">${bill.subtotal.toFixed(2)}</td>
+                                </tr>
+                                 <tr>
+                                    <td style=\"padding: 8px;\">Discount (${bill.discountPercent}%):</td>
+                                    <td style=\"padding: 8px; text-align: right;\">-${(bill.subtotal * bill.discountPercent/100).toFixed(2)}</td>
+                                </tr>
+                                <tr>
+                                    <td style=\"padding: 8px;\">GST (${bill.gstPercent}%):</td>
+                                    <td style=\"padding: 8px; text-align: right;\">${((bill.subtotal - (bill.subtotal * bill.discountPercent/100)) * bill.gstPercent/100).toFixed(2)}</td>
+                                </tr>
+                                <tr style=\"font-weight: bold; background-color: #f2f2f2; font-size: 14px;\">
+                                    <td style=\"padding: 10px; border-top: 2px solid #333;\">Total:</td>
+                                    <td style=\"padding: 10px; border-top: 2px solid #333; text-align: right;\">${bill.total.toFixed(2)}</td>
+                                </tr>
+                            </table>
+                            <div style=\"position: absolute; bottom: 40px; right: 80px; text-align: center;\">
+                                <p style=\"border-top: 1px solid #333; padding-top: 5px;\">Authorized Signatory</p>
+                            </div>
+                        </div>
+                    `;
+                    if (action === 'print') {
+                        const originalTitle = document.title;
+                        document.title = bill.billNumber;
+                        window.print();
+                        document.title = originalTitle;
+                    } else {
+                        const canvas = await html2canvas(previewEl, { scale: 3 });
+                        const imgData = canvas.toDataURL('image/png');
+                        const pdf = new jsPDF('p', 'mm', 'a4');
+                        const pdfWidth = 210;
+                        const pdfHeight = 297;
+                        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                        pdf.save(`${bill.billNumber}.pdf`);
+                    }
+                } catch (error) {
+                    console.error("PDF Action Error:", error);
+                    alert("Failed to perform action: " + error.message);
+                } finally {
+                    document.body.removeChild(loader);
+                }
+            }
             
             // --- Listen for and display recent bills ---
             const billsListBody = document.getElementById('bills-list-body');
