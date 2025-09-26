@@ -209,6 +209,7 @@
                 case 'doctors': renderAdminLayout('Manage Doctors', initializeDoctorsPage); break;
                 case 'expenditures': renderAdminLayout('Expenditures', initializeExpendituresPage); break;
                 case 'reports': renderAdminLayout('Financial Reports', renderReportsPage); break;
+                case 'commissions': renderAdminLayout('Commission Management', renderCommissionManagementPage); break;
                 default: renderHomePage();
             }
         }
@@ -225,10 +226,10 @@
         function renderHomePage() {
             appContainer.innerHTML = `
                 <div class="min-h-screen bg-white">
-                    <header class="absolute top-0 left-0 right-0 z-10 bg-white bg-opacity-90 shadow-md">
+                    <header class="absolute top-0 left-0 right-0 z-10 bg-gradient-to-r from-blue-700 via-blue-500 to-blue-400 shadow-md">
                         <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
-                            <h1 class="text-xl md:text-2xl font-bold text-gray-800">Perfect Diagnostic Centre</h1>
-                            <button id="go-to-login-nav" class="px-5 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-300">
+                            <h1 class="text-xl md:text-2xl font-bold text-white drop-shadow">Perfect Diagnostic Centre</h1>
+                            <button id="go-to-login-nav" class="px-5 py-2 bg-white text-blue-700 font-semibold rounded-lg shadow-md hover:bg-blue-100 transition duration-300">
                                 Admin Login
                             </button>
                         </nav>
@@ -241,6 +242,56 @@
                             <div class="relative container mx-auto px-6 text-center text-white">
                                 <h2 class="text-4xl md:text-6xl font-extrabold leading-tight tracking-tight">Your Partner in Accurate Diagnostics</h2>
                                 <p class="mt-4 text-lg md:text-xl max-w-2xl mx-auto text-gray-200">State-of-the-art technology ensuring patient care and satisfaction.</p>
+                            </div>
+                        </section>
+                        <!-- Feature Cards Section -->
+                        <section class="py-16 bg-white">
+                            <div class="container mx-auto px-6">
+                                <h3 class="text-3xl font-bold text-center text-blue-700 mb-10">Why Choose Us?</h3>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-center">
+                                    <div class="bg-blue-50 rounded-xl shadow-lg p-6 flex flex-col items-center">
+                                        <div class="bg-blue-100 text-blue-700 rounded-full p-3 mb-4">
+                                            <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4" /></svg>
+                                        </div>
+                                        <h4 class="font-semibold text-lg mb-2">Accurate Results</h4>
+                                        <p class="text-gray-600 text-center">Precision diagnostics for reliable health decisions.</p>
+                                    </div>
+                                    <div class="bg-blue-50 rounded-xl shadow-lg p-6 flex flex-col items-center">
+                                        <div class="bg-blue-100 text-blue-700 rounded-full p-3 mb-4">
+                                            <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01" /></svg>
+                                        </div>
+                                        <h4 class="font-semibold text-lg mb-2">Modern Machines</h4>
+                                        <p class="text-gray-600 text-center">Latest technology for advanced testing and imaging.</p>
+                                    </div>
+                                    <div class="bg-blue-50 rounded-xl shadow-lg p-6 flex flex-col items-center">
+                                        <div class="bg-blue-100 text-blue-700 rounded-full p-3 mb-4">
+                                            <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                                        </div>
+                                        <h4 class="font-semibold text-lg mb-2">Trusted Experts</h4>
+                                        <p class="text-gray-600 text-center">Experienced professionals for quality care.</p>
+                                    </div>
+                                    <div class="bg-blue-50 rounded-xl shadow-lg p-6 flex flex-col items-center">
+                                        <div class="bg-blue-100 text-blue-700 rounded-full p-3 mb-4">
+                                            <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3" /></svg>
+                                        </div>
+                                        <h4 class="font-semibold text-lg mb-2">Quick Turnaround</h4>
+                                        <p class="text-gray-600 text-center">Fast reporting for timely treatment decisions.</p>
+                                    </div>
+                                    <div class="bg-blue-50 rounded-xl shadow-lg p-6 flex flex-col items-center">
+                                        <div class="bg-blue-100 text-blue-700 rounded-full p-3 mb-4">
+                                            <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0-1.104.896-2 2-2s2 .896 2 2-.896 2-2 2-2-.896-2-2z" /></svg>
+                                        </div>
+                                        <h4 class="font-semibold text-lg mb-2">Affordable Pricing</h4>
+                                        <p class="text-gray-600 text-center">Competitive rates for all diagnostic services.</p>
+                                    </div>
+                                    <div class="bg-blue-50 rounded-xl shadow-lg p-6 flex flex-col items-center">
+                                        <div class="bg-blue-100 text-blue-700 rounded-full p-3 mb-4">
+                                            <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a5 5 0 00-10 0v2a2 2 0 00-2 2v5a2 2 0 002 2h10a2 2 0 002-2v-5a2 2 0 00-2-2z" /></svg>
+                                        </div>
+                                        <h4 class="font-semibold text-lg mb-2">Patient-Centric Care</h4>
+                                        <p class="text-gray-600 text-center">Compassionate service for every patient.</p>
+                                    </div>
+                                </div>
                             </div>
                         </section>
                         <section class="py-20 bg-gray-50">
@@ -315,9 +366,10 @@
                             ${SidebarItem('doctors', 'Doctors')}
                             ${SidebarItem('expenditures', 'Expenditure')}
                             ${SidebarItem('reports', 'Financial Report')}
+                            ${SidebarItem('commissions', 'Commission Management')}
                         </nav>
                         <div class="p-4">
-                            <button id="logout-btn" class="w-full py-2 px-4 text-left rounded-md sidebar-link">Sign Out</button>
+                            <button id="logout-btn" class="w-full py-2 px-4 text-left rounded-md sidebar-link bg-red-600 hover:bg-red-700 text-white font-semibold">Sign Out</button>
                         </div>
                     </aside>
                     <main class="flex-1 flex flex-col overflow-hidden">
@@ -539,7 +591,7 @@
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th class="px-6 py-3 text-left">Bill #</th><th class="px-6 py-3 text-left">Patient</th><th class="px-6 py-3 text-left">Date</th><th class="px-6 py-3 text-left">Total</th><th class="px-6 py-3 text-left">Actions</th>
+                                        <th class="px-6 py-3 text-left">Bill #</th><th class="px-6 py-3 text-left">Patient</th><th class="px-6 py-3 text-left">Date</th><th class="px-6 py-3 text-left">Total</th><th class="px-6 py-3 text-left">Status</th><th class="px-6 py-3 text-left">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="bills-list-body" class="bg-white divide-y divide-gray-200"></tbody>
@@ -624,7 +676,7 @@
                 allTests = testsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 allDoctors = doctorsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 const referredBySelect = document.getElementById('referred-by');
-                referredBySelect.innerHTML = '<option value="">None</option>' + allDoctors.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+                referredBySelect.innerHTML = '<option value="">Self</option>' + allDoctors.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
             }
             
             document.getElementById('add-bill-btn').onclick = () => { loadPrerequisites().then(() => { addBillItem(); openModal(); }); };
@@ -712,6 +764,12 @@
                         generateAndDownloadPDF(billId, 'download');
                     }
                 }
+                if (e.target.classList.contains('refund-bill-btn')) {
+                    const billId = e.target.dataset.id;
+                    if (billId) {
+                        handleRefundBill(billId);
+                    }
+                }
             });
 
             const unsubscribe = db.collection('bills').orderBy('createdAt', 'desc').limit(20).onSnapshot(snapshot => {
@@ -722,16 +780,59 @@
                 snapshot.forEach(doc => {
                     const bill = doc.data();
                     const row = billsListBody.insertRow();
+                    const status = bill.status === 'refunded' ? 'refunded' : 'paid';
                     row.innerHTML = `
                         <td class="px-6 py-4 font-medium text-gray-900">${bill.billNumber}</td>
                         <td class="px-6 py-4 text-gray-700">${bill.patientDetails.name}</td>
                         <td class="px-6 py-4 text-gray-600">${bill.createdAt.toDate().toLocaleDateString()}</td>
                         <td class="px-6 py-4 font-semibold text-gray-900">₹${bill.total.toFixed(2)}</td>
-                        <td class="px-6 py-4"><button data-id="${doc.id}" class="view-pdf-btn text-blue-600 hover:underline font-semibold">View/PDF</button></td>
+                        <td class="px-6 py-4">
+                            <span class="inline-block px-2 py-1 rounded text-xs font-semibold ${status === 'refunded' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}">${status}</span>
+                        </td>
+                        <td class="px-6 py-4 flex gap-3">
+                            <button data-id="${doc.id}" class="view-pdf-btn text-blue-600 hover:underline font-semibold">View/PDF</button>
+                            ${status !== 'refunded' ? `<button data-id="${doc.id}" class="refund-bill-btn text-red-600 hover:underline font-semibold">Refund</button>` : ''}
+                        </td>
                     `;
                 });
             });
             state.listeners.push(unsubscribe);
+        }
+
+        async function handleRefundBill(billId) {
+            showConfirmationModal('Refund Bill', 'Are you sure you want to refund this bill? This will reverse revenue and commission.', async () => {
+                try {
+                    const now = Timestamp.now();
+                    const billRef = db.collection('bills').doc(billId);
+                    const billSnap = await billRef.get();
+                    if (!billSnap.exists) { showModal('Not Found', 'Bill not found.'); return; }
+                    const bill = billSnap.data();
+                    if (bill.status === 'refunded') { showModal('Already Refunded', 'This bill has already been refunded.'); return; }
+
+                    // Mark bill as refunded
+                    await billRef.update({ status: 'refunded', refundedAt: now });
+
+                    // Reverse income
+                    await db.collection('transactions').add({ type: 'income', amount: -Number(bill.total || 0), description: `Refund for Bill #${bill.billNumber}`, relatedBillId: billId, date: now });
+
+                    // Reverse commission if applicable
+                    if (bill.referredById) {
+                        const doctorRef = db.collection('doctors').doc(bill.referredById);
+                        const doctorSnap = await doctorRef.get();
+                        const percent = doctorSnap.exists ? (doctorSnap.data().commissionPercent || 0) : 0;
+                        if (percent > 0) {
+                            const commissionAmount = Number(bill.subtotal || 0) * (percent / 100);
+                            await doctorRef.update({ commissionBalance: FieldValue.increment(-commissionAmount) });
+                            await db.collection('transactions').add({ type: 'commission', amount: -commissionAmount, description: `Commission reversal for Bill #${bill.billNumber}`, relatedBillId: billId, relatedDoctorId: bill.referredById, date: now });
+                        }
+                    }
+
+                    showModal('Refunded', 'Bill has been refunded successfully.');
+                } catch (error) {
+                    console.error('Refund error:', error);
+                    showModal('Error', 'Failed to refund bill. Please try again.');
+                }
+            });
         }
         
         // ========================================================================
@@ -803,9 +904,25 @@
                         <div class="bg-white p-6 rounded-xl shadow-lg"><h3 class="text-gray-500">Paid Commission</h3><p class="text-3xl font-bold text-orange-500">₹${totalCommission.toLocaleString('en-IN')}</p></div>
                         <div class="bg-white p-6 rounded-xl shadow-lg"><h3 class="text-gray-500">Total Expenditure</h3><p class="text-3xl font-bold text-red-600">₹${totalExpenditure.toLocaleString('en-IN')}</p></div>
                     </div>
-                    <div class="bg-white p-6 rounded-xl shadow-lg mt-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                        <div class="bg-white p-6 rounded-xl shadow-lg">
                          <h3 class="text-lg font-semibold text-gray-700 mb-4">Last 7 Days Financial Overview</h3>
                          <canvas id="financial-chart"></canvas>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-lg">
+                            <h3 class="text-lg font-semibold text-gray-700 mb-4">Last 30 Days - Daily Expenditure</h3>
+                            <canvas id="expenditure-30-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                        <div class="bg-white p-6 rounded-xl shadow-lg">
+                            <h3 class="text-lg font-semibold text-gray-700 mb-4">Last 30 Days - Daily Patient Visits</h3>
+                            <canvas id="patients-30-chart"></canvas>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-lg">
+                            <h3 class="text-lg font-semibold text-gray-700 mb-4">Last 30 Days - Daily Revenue</h3>
+                            <canvas id="revenue-30-chart"></canvas>
+                        </div>
                     </div>`;
 
                 document.getElementById('dashboard-loader').classList.add('hidden');
@@ -833,6 +950,113 @@
                                 borderWidth: 1
                             }
                         ]
+                    },
+                    options: { scales: { y: { beginAtZero: true } } }
+                });
+
+                // Prepare last 30 days labels
+                const labels30 = [];
+                const labelToIndex = {};
+                for (let i = 29; i >= 0; i--) {
+                    const d = new Date();
+                    d.setDate(d.getDate() - i);
+                    const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    labels30.push(label);
+                    labelToIndex[label] = labels30.length - 1;
+                }
+
+                const patientVisits = new Array(30).fill(0);
+                const revenue30 = new Array(30).fill(0);
+                const expenditure30 = new Array(30).fill(0);
+
+                const thirtyDaysAgo = new Date();
+                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                thirtyDaysAgo.setHours(0,0,0,0);
+                const start30Ts = Timestamp.fromDate(thirtyDaysAgo);
+
+                const [bills30Snap, income30Snap, expenditure30Snap] = await Promise.all([
+                    db.collection('bills').where('createdAt', '>=', start30Ts).get(),
+                    db.collection('transactions').where('date', '>=', start30Ts).get(),
+                    db.collection('expenditures').where('date', '>=', start30Ts).get()
+                ]);
+
+                // Patient visits based on bills per day (count bills per day)
+                bills30Snap.forEach(doc => {
+                    const b = doc.data();
+                    const label = b.createdAt.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    const idx = labelToIndex[label];
+                    if (idx !== undefined) patientVisits[idx] += 1;
+                });
+
+                // Revenue from income transactions only
+                income30Snap.forEach(doc => {
+                    const t = doc.data();
+                    if (t.type !== 'income') return;
+                    const label = t.date.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    const idx = labelToIndex[label];
+                    if (idx !== undefined) revenue30[idx] += Number(t.amount || 0);
+                });
+
+                // Expenditure per day
+                expenditure30Snap.forEach(doc => {
+                    const e = doc.data();
+                    if (!e.date) return;
+                    const label = e.date.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    const idx = labelToIndex[label];
+                    if (idx !== undefined) expenditure30[idx] += Number(e.amount || 0);
+                });
+
+                // Render line charts
+                const patientsChartCtx = document.getElementById('patients-30-chart').getContext('2d');
+                new Chart(patientsChartCtx, {
+                    type: 'line',
+                    data: {
+                        labels: labels30,
+                        datasets: [{
+                            label: 'Patients',
+                            data: patientVisits,
+                            tension: 0.3,
+                            fill: false,
+                            borderColor: '#2563eb',
+                            backgroundColor: 'rgba(37, 99, 235, 0.2)',
+                            pointRadius: 2
+                        }]
+                    },
+                    options: { scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+                });
+
+                const revenueChartCtx = document.getElementById('revenue-30-chart').getContext('2d');
+                new Chart(revenueChartCtx, {
+                    type: 'line',
+                    data: {
+                        labels: labels30,
+                        datasets: [{
+                            label: 'Revenue (₹)',
+                            data: revenue30,
+                            tension: 0.3,
+                            fill: false,
+                            borderColor: '#059669',
+                            backgroundColor: 'rgba(5, 150, 105, 0.2)',
+                            pointRadius: 2
+                        }]
+                    },
+                    options: { scales: { y: { beginAtZero: true } } }
+                });
+
+                const expenditureChartCtx = document.getElementById('expenditure-30-chart').getContext('2d');
+                new Chart(expenditureChartCtx, {
+                    type: 'line',
+                    data: {
+                        labels: labels30,
+                        datasets: [{
+                            label: 'Expenditure (₹)',
+                            data: expenditure30,
+                            tension: 0.3,
+                            fill: false,
+                            borderColor: '#dc2626',
+                            backgroundColor: 'rgba(220, 38, 38, 0.2)',
+                            pointRadius: 2
+                        }]
                     },
                     options: { scales: { y: { beginAtZero: true } } }
                 });
@@ -942,6 +1166,12 @@
                            <h3 class="text-lg font-bold">Financial Report (from ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()})</h3>
                            <button id="download-report-btn" class="px-4 py-2 bg-green-600 text-white font-semibold rounded-md">Download PDF</button>
                         </div>
+                        <div class="text-center mb-2">
+                            <div class="text-xl font-extrabold">Perfect Diagnostic and Ultrasound Centre</div>
+                            <div class="text-xs text-gray-600">Near Government Hospital, Front of Old Gate, Partawal Bazar, Maharajganj, Uttar Pradesh</div>
+                            <div class="text-xs text-gray-600">Phone: +91 9838104111 , +91 9616434212 | Email: perfectdiagnostic@gmail.com</div>
+                            <hr class="mt-2"/>
+                        </div>
                     `;
 
                     let tableHTML = `<table id="report-table" class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr>
@@ -953,9 +1183,14 @@
                         <th class="px-6 py-3">Net Profit</th>
                     </tr></thead><tbody class="bg-white divide-y divide-gray-200">`;
 
+                    let totalPatientsCount = 0, totalRevenue = 0, totalExpenditure = 0, totalCommission = 0;
                     sortedDates.forEach(dateStr => {
                         const data = dailyData[dateStr];
                         const netProfit = data.revenue - data.expenditure - data.commission;
+                        totalPatientsCount += data.patients.size;
+                        totalRevenue += data.revenue;
+                        totalExpenditure += data.expenditure;
+                        totalCommission += data.commission;
                         tableHTML += `<tr>
                             <td class="px-6 py-4">${new Date(dateStr).toLocaleDateString()}</td>
                             <td class="px-6 py-4">${data.patients.size}</td>
@@ -965,20 +1200,82 @@
                             <td class="px-6 py-4 font-bold ${netProfit >= 0 ? 'text-blue-600' : 'text-red-700'}">₹${netProfit.toFixed(2)}</td>
                         </tr>`;
                     });
+                    const totalNetProfit = totalRevenue - totalExpenditure - totalCommission;
+                    tableHTML += `<tr class="bg-gray-100 font-bold">
+                        <td class="px-6 py-4">Total</td>
+                        <td class="px-6 py-4">${totalPatientsCount}</td>
+                        <td class="px-6 py-4">₹${totalRevenue.toFixed(2)}</td>
+                        <td class="px-6 py-4">₹${totalExpenditure.toFixed(2)}</td>
+                        <td class="px-6 py-4">₹${totalCommission.toFixed(2)}</td>
+                        <td class="px-6 py-4">₹${totalNetProfit.toFixed(2)}</td>
+                    </tr>`;
 
                     tableHTML += `</tbody></table>`;
-                    reportOutput.innerHTML = reportTitle + `<div class="overflow-x-auto">${tableHTML}</div>`;
+
+                    // Compose a dedicated A4-width container for clean export
+                    const headerBlock = `
+                        <div style="text-align:center; border-bottom:2px solid #000; padding-bottom:10px; margin-bottom:16px;">
+                            <div style="font-size:22px; font-weight:700; color:#000;">Perfect Diagnostic and Ultrasound Centre</div>
+                            <div style="font-size:12px; margin-top:4px;">Near Government Hospital, Front of Old Gate, Partawal Bazar, Maharajganj, Uttar Pradesh</div>
+                            <div style="font-size:12px; margin-top:2px;">Phone: +91 9838104111 , +91 9616434212 | Email: perfectdiagnostic@gmail.com</div>
+                        </div>`;
+
+                    const reportHeading = `<div style="font-size:16px; font-weight:700; margin-bottom:12px;">Financial Report: ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}</div>`;
+
+                    const pdfRoot = `
+                        <div id="report-pdf-root" style="width:800px; margin:0 auto; background:#ffffff; color:#333; font-family:sans-serif; padding:20px;">
+                            ${headerBlock}
+                            ${reportHeading}
+                            <div style="overflow:hidden;">
+                                <table style="width:100%; border-collapse:collapse; font-size:12px;">
+                                    <thead>
+                                        <tr style="background:#f3f4f6;">
+                                            <th style="text-align:left; padding:8px; border:1px solid #e5e7eb;">Date</th>
+                                            <th style="text-align:right; padding:8px; border:1px solid #e5e7eb;">Patients</th>
+                                            <th style="text-align:right; padding:8px; border:1px solid #e5e7eb;">Revenue</th>
+                                            <th style="text-align:right; padding:8px; border:1px solid #e5e7eb;">Expenditure</th>
+                                            <th style="text-align:right; padding:8px; border:1px solid #e5e7eb;">Commission</th>
+                                            <th style="text-align:right; padding:8px; border:1px solid #e5e7eb;">Net Profit</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    ${sortedDates.map(dateStr => {
+                                        const data = dailyData[dateStr];
+                                        const netProfit = data.revenue - data.expenditure - data.commission;
+                                        return `<tr>
+                                            <td style=\"padding:8px; border:1px solid #e5e7eb;\">${new Date(dateStr).toLocaleDateString()}</td>
+                                            <td style=\"padding:8px; text-align:right; border:1px solid #e5e7eb;\">${data.patients.size}</td>
+                                            <td style=\"padding:8px; text-align:right; border:1px solid #e5e7eb; color:#059669; font-weight:600;\">₹${data.revenue.toFixed(2)}</td>
+                                            <td style=\"padding:8px; text-align:right; border:1px solid #e5e7eb; color:#dc2626; font-weight:600;\">₹${data.expenditure.toFixed(2)}</td>
+                                            <td style=\"padding:8px; text-align:right; border:1px solid #e5e7eb; color:#ea580c; font-weight:600;\">₹${data.commission.toFixed(2)}</td>
+                                            <td style=\"padding:8px; text-align:right; border:1px solid #e5e7eb; font-weight:700; color:${netProfit >= 0 ? '#2563eb' : '#b91c1c'};\">₹${netProfit.toFixed(2)}</td>
+                                        </tr>`;
+                                    }).join('')}
+                                    <tr style=\"background:#f3f4f6; font-weight:700;\">
+                                        <td style=\"padding:8px; border:1px solid #e5e7eb;\">Total</td>
+                                        <td style=\"padding:8px; text-align:right; border:1px solid #e5e7eb;\">${totalPatientsCount}</td>
+                                        <td style=\"padding:8px; text-align:right; border:1px solid #e5e7eb;\">₹${totalRevenue.toFixed(2)}</td>
+                                        <td style=\"padding:8px; text-align:right; border:1px solid #e5e7eb;\">₹${totalExpenditure.toFixed(2)}</td>
+                                        <td style=\"padding:8px; text-align:right; border:1px solid #e5e7eb;\">₹${totalCommission.toFixed(2)}</td>
+                                        <td style=\"padding:8px; text-align:right; border:1px solid #e5e7eb;\">₹${(totalRevenue - totalExpenditure - totalCommission).toFixed(2)}</td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>`;
+
+                    reportOutput.innerHTML = reportTitle + `<div class="overflow-x-auto">${pdfRoot}</div>`;
 
                     document.getElementById('download-report-btn').onclick = () => {
-                        const reportContent = document.getElementById('report-output');
+                        const reportContent = document.getElementById('report-pdf-root');
                         if (reportContent) {
                             const { jsPDF } = window.jspdf;
-                             html2canvas(reportContent).then(canvas => {
+                            html2canvas(reportContent, { scale: 2, useCORS: true, backgroundColor: '#ffffff' }).then(canvas => {
                                 const imgData = canvas.toDataURL('image/png');
                                 const pdf = new jsPDF('p', 'mm', 'a4');
                                 const pdfWidth = pdf.internal.pageSize.getWidth();
-                                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-                                pdf.addImage(imgData, 'PNG', 10, 10, pdfWidth - 20, pdfHeight - 20);
+                                const pdfHeight = (canvas.height * (pdfWidth - 20)) / canvas.width; // 10mm margin
+                                pdf.addImage(imgData, 'PNG', 10, 10, pdfWidth - 20, pdfHeight);
                                 pdf.save(`financial_report_${startDateStr}_to_${endDateStr}.pdf`);
                             });
                         }
@@ -988,6 +1285,167 @@
                     reportOutput.innerHTML = `<div id="report-container" class="overflow-x-auto"><p class="text-center text-red-500 py-8">Failed to generate report. Please check the console.</p></div>`;
                 }
             };
+        }
+
+        // ========================================================================
+        // --- 9b. COMMISSION MANAGEMENT PAGE ---
+        // ========================================================================
+        async function renderCommissionManagementPage() {
+            const content = document.getElementById('page-content');
+            const currentYear = new Date().getFullYear();
+            const years = Array.from({ length: 6 }, (_, i) => currentYear - i);
+            const months = [
+                'January','February','March','April','May','June','July','August','September','October','November','December'
+            ];
+
+            content.innerHTML = `
+                <div class="bg-white p-6 rounded-xl shadow-lg space-y-4">
+                    <div class="flex flex-wrap gap-4 items-end">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Year</label>
+                            <select id="cm-year" class="mt-1 p-2 border rounded-md">
+                                ${years.map(y => `<option value="${y}" ${y===currentYear?'selected':''}>${y}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Month</label>
+                            <select id="cm-month" class="mt-1 p-2 border rounded-md">
+                                ${months.map((m, i) => `<option value="${i}">${m}</option>`).join('')}
+                            </select>
+                        </div>
+                        <button id="cm-apply" class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md">Apply</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left">Doctor</th>
+                                    <th class="px-6 py-3 text-left">Location</th>
+                                    <th class="px-6 py-3 text-right">Commission Earned</th>
+                                    <th class="px-6 py-3 text-right">Commission Paid</th>
+                                    <th class="px-6 py-3 text-right">Pending</th>
+                                    <th class="px-6 py-3 text-left">Status</th>
+                                    <th class="px-6 py-3 text-left">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cm-body" class="bg-white divide-y divide-gray-200"></tbody>
+                        </table>
+                    </div>
+                </div>`;
+
+            const applyBtn = document.getElementById('cm-apply');
+            applyBtn.onclick = loadAndRender;
+            await loadAndRender();
+
+            async function loadAndRender() {
+                const year = parseInt(document.getElementById('cm-year').value);
+                const month = parseInt(document.getElementById('cm-month').value);
+                const start = new Date(year, month, 1, 0, 0, 0, 0);
+                const end = new Date(year, month + 1, 0, 23, 59, 59, 999);
+                const startTs = Timestamp.fromDate(start);
+                const endTs = Timestamp.fromDate(end);
+
+                const [doctorsSnap, billsSnap, txSnap, paidMonthlySnap] = await Promise.all([
+                    db.collection('doctors').get(),
+                    db.collection('bills').where('createdAt', '>=', startTs).where('createdAt', '<=', endTs).get(),
+                    db.collection('transactions').where('date', '>=', startTs).where('date', '<=', endTs).get(),
+                    db.collection('commission_paid_monthly').where('year', '==', year).where('month', '==', month).get()
+                ]);
+
+                const doctorMap = new Map();
+                doctorsSnap.forEach(doc => {
+                    const d = doc.data();
+                    doctorMap.set(doc.id, { id: doc.id, name: d.name || 'N/A', location: d.location || '—', percent: Number(d.commissionPercent || 0), earned: 0, paid: 0 });
+                });
+
+                // Commission earned from bills in month
+                billsSnap.forEach(doc => {
+                    const b = doc.data();
+                    if (b.status === 'refunded') return;
+                    if (!b.referredById) return;
+                    const dm = doctorMap.get(b.referredById);
+                    if (!dm) return;
+                    dm.earned += Number(b.subtotal || 0) * (dm.percent / 100);
+                });
+
+                // Commission paid: prefer admin-entered monthly totals (exact values)
+                const monthlyPaidMap = new Map();
+                paidMonthlySnap.forEach(doc => {
+                    const d = doc.data();
+                    monthlyPaidMap.set(d.doctorId, { totalPaid: Number(d.totalPaid || 0), locked: !!d.locked });
+                });
+                doctorMap.forEach((dm, id) => {
+                    if (monthlyPaidMap.has(id)) {
+                        const rec = monthlyPaidMap.get(id);
+                        dm.paid = rec.totalPaid;
+                        dm.locked = rec.locked;
+                    } else {
+                        // Fallback: derive from transactions if no monthly record exists
+                        dm.paid = 0;
+                        dm.locked = false;
+                    }
+                });
+
+                const tbody = document.getElementById('cm-body');
+                tbody.innerHTML = '';
+                doctorMap.forEach(d => {
+                    const pending = Math.max(0, d.earned - d.paid);
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="px-6 py-4">${d.name}</td>
+                        <td class="px-6 py-4">${d.location}</td>
+                        <td class="px-6 py-4 text-right">₹${d.earned.toFixed(2)}</td>
+                        <td class="px-6 py-4 text-right">₹${d.paid.toFixed(2)}</td>
+                        <td class="px-6 py-4 text-right font-semibold ${pending>0?'text-orange-600':'text-green-700'}">₹${pending.toFixed(2)}</td>
+                        <td class="px-6 py-4">${d.locked ? '<span class="px-2 py-1 rounded text-xs font-semibold bg-green-100 text-green-700">paid</span>' : '<span class="px-2 py-1 rounded text-xs font-semibold bg-red-100 text-red-700">unpaid</span>'}</td>
+                        <td class="px-6 py-4 space-x-3">
+                            ${d.locked ? '<span class="text-gray-400 text-sm">Locked</span>' : `<button data-id="${d.id}" data-earned="${d.earned}" class="cm-markpaid text-blue-600 font-semibold hover:underline">Mark Paid</button>`}
+                        </td>`;
+                    tbody.appendChild(tr);
+                });
+
+                // Actions
+                tbody.querySelectorAll('.cm-markpaid').forEach(btn => {
+                    btn.onclick = () => confirmAndMarkPaid(btn.getAttribute('data-id'), parseFloat(btn.getAttribute('data-earned')||'0'));
+                });
+
+                function promptAddPaid(doctorId) {
+                    const container = document.createElement('div');
+                    container.innerHTML = `<div class="space-y-3"><label class="block text-sm">Amount (₹)</label><input id="cm-amount" type="number" min="0" class="w-full p-2 border rounded-md" placeholder="0"/></div>`;
+                    showModal('Add Commission Paid', 'Enter amount to add as paid.', [
+                        { text: 'Cancel', class: 'bg-gray-500 hover:bg-gray-600', action: hideModal },
+                        { text: 'Add', class: 'bg-blue-600 hover:bg-blue-700', action: async () => {
+                            const inputEl = container.querySelector('#cm-amount');
+                            const amt = parseFloat(inputEl && inputEl.value ? inputEl.value : '0');
+                            if (!(amt > 0)) { showModal('Invalid', 'Amount must be greater than 0'); return; }
+                            // Update monthly aggregate doc
+                            const y = parseInt(document.getElementById('cm-year').value), m = parseInt(document.getElementById('cm-month').value);
+                            const key = `${doctorId}_${y}_${m}`;
+                            const docRef = db.collection('commission_paid_monthly').doc(key);
+                            await db.runTransaction(async t => {
+                                const snap = await t.get(docRef);
+                                const curr = snap.exists ? (snap.data().totalPaid || 0) : 0;
+                                t.set(docRef, { doctorId, year: y, month: m, totalPaid: curr + amt }, { merge: true });
+                            });
+                            await loadAndRender();
+                        }}
+                    ]);
+                    // Inject inputs into modal message area
+                    const msgEl = document.getElementById('generic-modal-message');
+                    if (msgEl) { msgEl.innerHTML = ''; msgEl.appendChild(container.firstChild); }
+                }
+
+                function confirmAndMarkPaid(doctorId, earned) {
+                    showConfirmationModal('Mark Paid', 'Are you sure you want to mark this month as PAID? Once marked, it cannot be changed.', async () => {
+                        const y = parseInt(document.getElementById('cm-year').value), m = parseInt(document.getElementById('cm-month').value);
+                        const key = `${doctorId}_${y}_${m}`;
+                        await db.collection('commission_paid_monthly').doc(key).set({ doctorId, year: y, month: m, totalPaid: earned, locked: true, settledAt: Timestamp.now() }, { merge: true });
+                        await loadAndRender();
+                    });
+                }
+
+                // PDF download removed per request
+            }
         }
 
         // ========================================================================
@@ -1011,12 +1469,6 @@
                 const doctorName = bill.referredById ? (await db.collection('doctors').doc(bill.referredById).get()).data()?.name || 'N/A' : 'N/A';
                 
                 const patient = bill.patientDetails;
-                let uniqueCode = 'N/A';
-                if (patient.phone && patient.phone.length >= 4 && patient.name && patient.age) {
-                    const phoneLast4 = patient.phone.slice(-4);
-                    const nameFirst2 = patient.name.substring(0, 2).toUpperCase();
-                    uniqueCode = `${phoneLast4}${nameFirst2}${patient.age}`;
-                }
 
                 const itemsHtml = bill.items.map((item, index) => `
                     <tr style="border-bottom: 1px solid #eee;">
@@ -1042,8 +1494,7 @@
                                 <strong style="display: block; margin-bottom: 5px; font-size: 16px;">Patient Information</strong>
                                 <strong>Name:</strong> ${patient.name}<br>
                                 <strong>Age/Gender:</strong> ${patient.age || 'N/A'} Years / ${patient.gender}<br>
-                                <strong>Mobile:</strong> ${patient.phone || 'N/A'}<br>
-                                <strong>Unique Code:</strong> ${uniqueCode}
+                                <strong>Mobile:</strong> ${patient.phone || 'N/A'}
                             </td>
                             <td style="padding: 5px; vertical-align: top; width: 50%; text-align: right;">
                                  <strong style="display: block; margin-bottom: 5px; font-size: 16px;">Bill Details</strong>
@@ -1077,40 +1528,43 @@
                     </div>
                 </div>`;
                 
-                const previewEl = document.getElementById('pdf-preview');
-                previewEl.innerHTML = pdfHTML;
-                
-                previewEl.classList.remove('hidden');
-                previewEl.style.position = 'fixed';
-                previewEl.style.left = '0';
-                previewEl.style.top = '0';
-                previewEl.style.zIndex = '1';
-                previewEl.style.opacity = '0';
+                // Create a temporary off-screen container (pattern used in report export)
+                const tempContainer = document.createElement('div');
+                tempContainer.style.position = 'absolute';
+                tempContainer.style.left = '-9999px';
+                tempContainer.style.top = '0';
+                tempContainer.style.width = '800px';
+                tempContainer.style.background = '#ffffff';
+                tempContainer.innerHTML = pdfHTML;
+                document.body.appendChild(tempContainer);
 
-                await new Promise(resolve => setTimeout(resolve, 100));
+                // Wait a frame for layout
+                await new Promise(resolve => requestAnimationFrame(resolve));
 
-                const canvas = await html2canvas(previewEl, {
+                const canvas = await html2canvas(tempContainer, {
                     scale: 2,
                     useCORS: true,
                     backgroundColor: '#ffffff'
                 });
                 
-                previewEl.classList.add('hidden');
-                previewEl.style.position = 'fixed';
-                previewEl.style.left = '-2000px';
-                previewEl.style.top = '0';
-                previewEl.style.zIndex = 'auto';
-                previewEl.style.opacity = '1';
+                // Clean up DOM
+                tempContainer.remove();
 
                 const imgData = canvas.toDataURL('image/png');
                 const pdf = new jsPDF('p', 'mm', 'a4');
                 const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                const pdfHeight = (canvas.height * (pdfWidth - 20)) / canvas.width; // 10mm margin each side
+                pdf.addImage(imgData, 'PNG', 10, 10, pdfWidth - 20, pdfHeight);
                 
                 if (action === 'print') {
-                    pdf.autoPrint();
-                    pdf.output('dataurlnewwindow');
+                    const blobUrl = pdf.output('bloburl');
+                    const printWindow = window.open(blobUrl, '_blank');
+                    if (printWindow) {
+                        printWindow.addEventListener('load', () => {
+                            printWindow.focus();
+                            printWindow.print();
+                        });
+                    }
                 } else {
                     pdf.save(`${bill.billNumber}_${patient.name.replace(/ /g, '_')}.pdf`);
                 }
