@@ -210,6 +210,7 @@
                 case 'expenditures': renderAdminLayout('Expenditures', initializeExpendituresPage); break;
                 case 'reports': renderAdminLayout('Financial Reports', renderReportsPage); break;
                 case 'commissions': renderAdminLayout('Commission Management', renderCommissionManagementPage); break;
+                case 'patient-management': renderAdminLayout('Patient Management', renderPatientManagementPage); break;
                 default: renderHomePage();
             }
         }
@@ -367,6 +368,7 @@
                             ${SidebarItem('expenditures', 'Expenditure')}
                             ${SidebarItem('reports', 'Financial Report')}
                             ${SidebarItem('commissions', 'Commission Management')}
+                            ${SidebarItem('patient-management', 'Patient Management')}
                         </nav>
                         <div class="p-4">
                             <button id="logout-btn" class="w-full py-2 px-4 text-left rounded-md sidebar-link bg-red-600 hover:bg-red-700 text-white font-semibold">Sign Out</button>
@@ -779,11 +781,12 @@
                 }
                 snapshot.forEach(doc => {
                     const bill = doc.data();
+                    const patientName = bill.patientDetails?.name || 'Unknown';
                     const row = billsListBody.insertRow();
                     const status = bill.status === 'refunded' ? 'refunded' : 'paid';
                     row.innerHTML = `
                         <td class="px-6 py-4 font-medium text-gray-900">${bill.billNumber}</td>
-                        <td class="px-6 py-4 text-gray-700">${bill.patientDetails.name}</td>
+                        <td class="px-6 py-4 text-gray-700">${patientName}</td>
                         <td class="px-6 py-4 text-gray-600">${bill.createdAt.toDate().toLocaleDateString()}</td>
                         <td class="px-6 py-4 font-semibold text-gray-900">₹${bill.total.toFixed(2)}</td>
                         <td class="px-6 py-4">
@@ -844,17 +847,30 @@
             content.innerHTML = `<div id="dashboard-loader" class="text-center py-10"><div class="spinner h-12 w-12 mx-auto border-4"></div></div><div id="dashboard-content" class="hidden"></div>`;
 
             try {
-                // Fetch summary data
-                const [patientsSnap, transactionsSnap, expendituresSnap] = await Promise.all([db.collection('patients').get(), db.collection('transactions').get(), db.collection('expenditures').get()]);
-                const totalPatients = patientsSnap.size;
-                let totalIncome = 0, totalCommission = 0, totalExpenditure = 0;
+                // Fetch today's data
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const startOfDay = Timestamp.fromDate(today);
+
+                const [patientsSnap, transactionsSnap, expendituresSnap] = await Promise.all([
+                    db.collection('patients').where('createdAt', '>=', startOfDay).get(),
+                    db.collection('transactions').where('date', '>=', startOfDay).get(),
+                    db.collection('expenditures').where('date', '>=', startOfDay).get()
+                ]);
+
+                const dailyPatients = patientsSnap.size;
+                let dailyIncomeTotal = 0, dailyCommission = 0, dailyExpenditureTotal = 0;
+
                 transactionsSnap.forEach(doc => {
                     const t = doc.data();
-                    if (t.type === 'income') totalIncome += t.amount;
-                    if (t.type === 'commission') totalCommission += t.amount;
+                    if (t.type === 'income') dailyIncomeTotal += t.amount;
+                    if (t.type === 'commission') dailyCommission += t.amount;
                 });
-                expendituresSnap.forEach(doc => { totalExpenditure += doc.data().amount; });
-                
+
+                expendituresSnap.forEach(doc => {
+                    dailyExpenditureTotal += doc.data().amount;
+                });
+
                 // Prepare data for the chart (last 7 days)
                 const labels = [];
                 const incomeData = [];
@@ -881,33 +897,33 @@
 
                 const mapDateToValue = (docs) => {
                     const dateMap = {};
-                     docs.forEach(doc => {
+                    docs.forEach(doc => {
                         const date = doc.data().date.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                         dateMap[date] = (dateMap[date] || 0) + doc.data().amount;
                     });
                     return dateMap;
                 };
 
-                const dailyIncome = mapDateToValue(incomeDocs);
-                const dailyExpenditure = mapDateToValue(expenditureTxs.docs);
+                const dailyIncomeMap = mapDateToValue(incomeDocs);
+                const dailyExpenditureMap = mapDateToValue(expenditureTxs.docs);
 
                 labels.forEach((label, index) => {
-                    if (dailyIncome[label]) incomeData[index] = dailyIncome[label];
-                    if (dailyExpenditure[label]) expenditureData[index] = dailyExpenditure[label];
+                    if (dailyIncomeMap[label]) incomeData[index] = dailyIncomeMap[label];
+                    if (dailyExpenditureMap[label]) expenditureData[index] = dailyExpenditureMap[label];
                 });
 
-                // Render content
+                // Render daily data on the dashboard
                 document.getElementById('dashboard-content').innerHTML = `
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <div class="bg-white p-6 rounded-xl shadow-lg"><h3 class="text-gray-500">Total Patients</h3><p class="text-3xl font-bold">${totalPatients}</p></div>
-                        <div class="bg-white p-6 rounded-xl shadow-lg"><h3 class="text-gray-500">Total Income</h3><p class="text-3xl font-bold text-green-600">₹${totalIncome.toLocaleString('en-IN')}</p></div>
-                        <div class="bg-white p-6 rounded-xl shadow-lg"><h3 class="text-gray-500">Paid Commission</h3><p class="text-3xl font-bold text-orange-500">₹${totalCommission.toLocaleString('en-IN')}</p></div>
-                        <div class="bg-white p-6 rounded-xl shadow-lg"><h3 class="text-gray-500">Total Expenditure</h3><p class="text-3xl font-bold text-red-600">₹${totalExpenditure.toLocaleString('en-IN')}</p></div>
+                        <div class="bg-white p-6 rounded-xl shadow-lg"><h3 class="text-gray-500">Daily Patients</h3><p class="text-3xl font-bold">${dailyPatients}</p></div>
+                        <div class="bg-white p-6 rounded-xl shadow-lg"><h3 class="text-gray-500">Daily Income</h3><p class="text-3xl font-bold text-green-600">₹${dailyIncomeTotal.toLocaleString('en-IN')}</p></div>
+                        <div class="bg-white p-6 rounded-xl shadow-lg"><h3 class="text-gray-500">Daily Commission</h3><p class="text-3xl font-bold text-orange-500">₹${dailyCommission.toLocaleString('en-IN')}</p></div>
+                        <div class="bg-white p-6 rounded-xl shadow-lg"><h3 class="text-gray-500">Daily Expenditure</h3><p class="text-3xl font-bold text-red-600">₹${dailyExpenditureTotal.toLocaleString('en-IN')}</p></div>
                     </div>
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                         <div class="bg-white p-6 rounded-xl shadow-lg">
-                         <h3 class="text-lg font-semibold text-gray-700 mb-4">Last 7 Days Financial Overview</h3>
-                         <canvas id="financial-chart"></canvas>
+                            <h3 class="text-lg font-semibold text-gray-700 mb-4">Last 7 Days Financial Overview</h3>
+                            <canvas id="financial-chart"></canvas>
                         </div>
                         <div class="bg-white p-6 rounded-xl shadow-lg">
                             <h3 class="text-lg font-semibold text-gray-700 mb-4">Last 30 Days - Daily Expenditure</h3>
@@ -928,138 +944,149 @@
                 document.getElementById('dashboard-loader').classList.add('hidden');
                 document.getElementById('dashboard-content').classList.remove('hidden');
 
-                // Render Chart
-                const ctx = document.getElementById('financial-chart').getContext('2d');
-                new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [
-                            {
-                                label: 'Income',
-                                data: incomeData,
-                                backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                                borderColor: 'rgba(54, 162, 235, 1)',
-                                borderWidth: 1
-                            },
-                            {
-                                label: 'Expenditure',
-                                data: expenditureData,
-                                backgroundColor: 'rgba(255, 99, 132, 0.6)',
-                                borderColor: 'rgba(255, 99, 132, 1)',
-                                borderWidth: 1
-                            }
-                        ]
-                    },
-                    options: { scales: { y: { beginAtZero: true } } }
-                });
+                // Ensure canvas elements are available before rendering charts
+                const financialChartCanvas = document.getElementById('financial-chart');
+                const expenditureChartCanvas = document.getElementById('expenditure-30-chart');
+                const patientsChartCanvas = document.getElementById('patients-30-chart');
+                const revenueChartCanvas = document.getElementById('revenue-30-chart');
 
-                // Prepare last 30 days labels
-                const labels30 = [];
-                const labelToIndex = {};
-                for (let i = 29; i >= 0; i--) {
-                    const d = new Date();
-                    d.setDate(d.getDate() - i);
-                    const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                    labels30.push(label);
-                    labelToIndex[label] = labels30.length - 1;
+                if (financialChartCanvas && expenditureChartCanvas && patientsChartCanvas && revenueChartCanvas) {
+                    // Render Chart
+                    const ctx = financialChartCanvas.getContext('2d');
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                {
+                                    label: 'Income',
+                                    data: incomeData,
+                                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                                    borderColor: 'rgba(54, 162, 235, 1)',
+                                    borderWidth: 1
+                                },
+                                {
+                                    label: 'Expenditure',
+                                    data: expenditureData,
+                                    backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                                    borderColor: 'rgba(255, 99, 132, 1)',
+                                    borderWidth: 1
+                                }
+                            ]
+                        },
+                        options: { scales: { y: { beginAtZero: true } } }
+                    });
+
+                    // Prepare last 30 days labels
+                    const labels30 = [];
+                    const labelToIndex = {};
+                    for (let i = 29; i >= 0; i--) {
+                        const d = new Date();
+                        d.setDate(d.getDate() - i);
+                        const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        labels30.push(label);
+                        labelToIndex[label] = labels30.length - 1;
+                    }
+
+                    const patientVisits = new Array(30).fill(0);
+                    const revenue30 = new Array(30).fill(0);
+                    const expenditure30 = new Array(30).fill(0);
+
+                    const thirtyDaysAgo = new Date();
+                    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                    thirtyDaysAgo.setHours(0,0,0,0);
+                    const start30Ts = Timestamp.fromDate(thirtyDaysAgo);
+
+                    const [bills30Snap, income30Snap, expenditure30Snap] = await Promise.all([
+                        db.collection('bills').where('createdAt', '>=', start30Ts).get(),
+                        db.collection('transactions').where('date', '>=', start30Ts).get(),
+                        db.collection('expenditures').where('date', '>=', start30Ts).get()
+                    ]);
+
+                    // Patient visits based on bills per day (count bills per day)
+                    bills30Snap.forEach(doc => {
+                        const b = doc.data();
+                        const label = b.createdAt.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        const idx = labelToIndex[label];
+                        if (idx !== undefined) patientVisits[idx] += 1;
+                    });
+
+                    // Revenue from income transactions only
+                    income30Snap.forEach(doc => {
+                        const t = doc.data();
+                        if (t.type !== 'income') return;
+                        const label = t.date.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        const idx = labelToIndex[label];
+                        if (idx !== undefined) revenue30[idx] += Number(t.amount || 0);
+                    });
+
+                    // Expenditure per day
+                    expenditure30Snap.forEach(doc => {
+                        const e = doc.data();
+                        if (!e.date) return;
+                        const label = e.date.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        const idx = labelToIndex[label];
+                        if (idx !== undefined) expenditure30[idx] += Number(e.amount || 0);
+                    });
+
+                    // Render line charts
+                    const patientsChartCtx = document.getElementById('patients-30-chart').getContext('2d');
+                    new Chart(patientsChartCtx, {
+                        type: 'line',
+                        data: {
+                            labels: labels30,
+                            datasets: [{
+                                label: 'Patients',
+                                data: patientVisits,
+                                tension: 0.3,
+                                fill: false,
+                                borderColor: '#2563eb',
+                                backgroundColor: 'rgba(37, 99, 235, 0.2)',
+                                pointRadius: 2
+                            }]
+                        },
+                        options: { scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+                    });
+
+                    const revenueChartCtx = document.getElementById('revenue-30-chart').getContext('2d');
+                    new Chart(revenueChartCtx, {
+                        type: 'line',
+                        data: {
+                            labels: labels30,
+                            datasets: [{
+                                label: 'Revenue (₹)',
+                                data: revenue30,
+                                tension: 0.3,
+                                fill: false,
+                                borderColor: '#059669',
+                                backgroundColor: 'rgba(5, 150, 105, 0.2)',
+                                pointRadius: 2
+                            }]
+                        },
+                        options: { scales: { y: { beginAtZero: true } } }
+                    });
+
+                    const expenditureChartCtx = document.getElementById('expenditure-30-chart').getContext('2d');
+                    new Chart(expenditureChartCtx, {
+                        type: 'line',
+                        data: {
+                            labels: labels30,
+                            datasets: [{
+                                label: 'Expenditure (₹)',
+                                data: expenditure30,
+                                tension: 0.3,
+                                fill: false,
+                                borderColor: '#dc2626',
+                                backgroundColor: 'rgba(220, 38, 38, 0.2)',
+                                pointRadius: 2
+                            }]
+                        },
+                        options: { scales: { y: { beginAtZero: true } } }
+                    });
+
+                } else {
+                    console.error("Canvas elements not found for rendering charts.");
                 }
-
-                const patientVisits = new Array(30).fill(0);
-                const revenue30 = new Array(30).fill(0);
-                const expenditure30 = new Array(30).fill(0);
-
-                const thirtyDaysAgo = new Date();
-                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-                thirtyDaysAgo.setHours(0,0,0,0);
-                const start30Ts = Timestamp.fromDate(thirtyDaysAgo);
-
-                const [bills30Snap, income30Snap, expenditure30Snap] = await Promise.all([
-                    db.collection('bills').where('createdAt', '>=', start30Ts).get(),
-                    db.collection('transactions').where('date', '>=', start30Ts).get(),
-                    db.collection('expenditures').where('date', '>=', start30Ts).get()
-                ]);
-
-                // Patient visits based on bills per day (count bills per day)
-                bills30Snap.forEach(doc => {
-                    const b = doc.data();
-                    const label = b.createdAt.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                    const idx = labelToIndex[label];
-                    if (idx !== undefined) patientVisits[idx] += 1;
-                });
-
-                // Revenue from income transactions only
-                income30Snap.forEach(doc => {
-                    const t = doc.data();
-                    if (t.type !== 'income') return;
-                    const label = t.date.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                    const idx = labelToIndex[label];
-                    if (idx !== undefined) revenue30[idx] += Number(t.amount || 0);
-                });
-
-                // Expenditure per day
-                expenditure30Snap.forEach(doc => {
-                    const e = doc.data();
-                    if (!e.date) return;
-                    const label = e.date.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                    const idx = labelToIndex[label];
-                    if (idx !== undefined) expenditure30[idx] += Number(e.amount || 0);
-                });
-
-                // Render line charts
-                const patientsChartCtx = document.getElementById('patients-30-chart').getContext('2d');
-                new Chart(patientsChartCtx, {
-                    type: 'line',
-                    data: {
-                        labels: labels30,
-                        datasets: [{
-                            label: 'Patients',
-                            data: patientVisits,
-                            tension: 0.3,
-                            fill: false,
-                            borderColor: '#2563eb',
-                            backgroundColor: 'rgba(37, 99, 235, 0.2)',
-                            pointRadius: 2
-                        }]
-                    },
-                    options: { scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
-                });
-
-                const revenueChartCtx = document.getElementById('revenue-30-chart').getContext('2d');
-                new Chart(revenueChartCtx, {
-                    type: 'line',
-                    data: {
-                        labels: labels30,
-                        datasets: [{
-                            label: 'Revenue (₹)',
-                            data: revenue30,
-                            tension: 0.3,
-                            fill: false,
-                            borderColor: '#059669',
-                            backgroundColor: 'rgba(5, 150, 105, 0.2)',
-                            pointRadius: 2
-                        }]
-                    },
-                    options: { scales: { y: { beginAtZero: true } } }
-                });
-
-                const expenditureChartCtx = document.getElementById('expenditure-30-chart').getContext('2d');
-                new Chart(expenditureChartCtx, {
-                    type: 'line',
-                    data: {
-                        labels: labels30,
-                        datasets: [{
-                            label: 'Expenditure (₹)',
-                            data: expenditure30,
-                            tension: 0.3,
-                            fill: false,
-                            borderColor: '#dc2626',
-                            backgroundColor: 'rgba(220, 38, 38, 0.2)',
-                            pointRadius: 2
-                        }]
-                    },
-                    options: { scales: { y: { beginAtZero: true } } }
-                });
 
             } catch (error) {
                 console.error("Error loading dashboard:", error);
@@ -1201,24 +1228,24 @@
                         <td class="px-6 py-4">₹${totalRevenue.toFixed(2)}</td>
                         <td class="px-6 py-4">₹${totalExpenditure.toFixed(2)}</td>
                         <td class="px-6 py-4">₹${totalCommission.toFixed(2)}</td>
-                        <td class="px-6 py-4">₹${totalNetProfit.toFixed(2)}</td>
+                        <td class="px-6 py-4">₹${(totalRevenue - totalExpenditure - totalCommission).toFixed(2)}</td>
                     </tr>`;
 
                     tableHTML += `</tbody></table>`;
 
                     // Compose a dedicated A4-width container for clean export
-                    const headerBlock = `
+                    let headerBlock = `
                         <div style="text-align:center; border-bottom:2px solid #000; padding-bottom:10px; margin-bottom:16px;">
                             <div style="font-size:22px; font-weight:700; color:#000;">Perfect Diagnostic and Ultrasound Centre</div>
                             <div style="font-size:12px; margin-top:4px;">Near Government Hospital, Front of Old Gate, Partawal Bazar, Maharajganj, Uttar Pradesh</div>
                             <div style="font-size:12px; margin-top:2px;">Phone: +91 9838104111 , +91 9616434212 | Email: perfectdiagnostic@gmail.com</div>
                         </div>`;
 
-                    const reportHeading = `<div style="font-size:16px; font-weight:700; margin-bottom:12px;">Financial Report: ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}</div>`;
+                    let reportHeading = `<div style="font-size:16px; font-weight:700; margin-bottom:12px;">Financial Report: ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}</div>`;
 
-                    const pdfRoot = `
+                    let pdfRoot = `
                         <div id="report-pdf-root" style="width:800px; margin:0 auto; background:#ffffff; color:#333; font-family:sans-serif; padding:20px;">
-                            ${headerBlock}
+                                                       ${headerBlock}
                             ${reportHeading}
                             <div style="overflow:hidden;">
                                 <table style="width:100%; border-collapse:collapse; font-size:12px;">
@@ -1252,11 +1279,7 @@
                                         <td style=\"padding:8px; text-align:right; border:1px solid #e5e7eb;\">₹${totalExpenditure.toFixed(2)}</td>
                                         <td style=\"padding:8px; text-align:right; border:1px solid #e5e7eb;\">₹${totalCommission.toFixed(2)}</td>
                                         <td style=\"padding:8px; text-align:right; border:1px solid #e5e7eb;\">₹${(totalRevenue - totalExpenditure - totalCommission).toFixed(2)}</td>
-                                    </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>`;
+                                    </tr>`;
 
                     reportOutput.innerHTML = reportTitle + `<div class="overflow-x-auto">${pdfRoot}</div>`;
 
@@ -1577,4 +1600,3 @@
     </script>
 </body>
 </html>
-
